@@ -16,7 +16,7 @@ With this ultimate goal in mind, the goals of this epitope identification projec
 
 ### 1. Establish a baseline of epitope identification performance from predicted structure
 
-[BP3](https://onlinelibrary.wiley.com/doi/full/10.1002/pro.4497), the currect SOTA model in epitope identificaiton, use ESM-2 LM embeddings to predict where epitope residues are located given a protein sequence. 
+[BP3](https://onlinelibrary.wiley.com/doi/full/10.1002/pro.4497), the currect SOTA model in epitope identification, use ESM-2 LM embeddings to predict where epitope residues are located given a protein sequence. 
 
 While this has proved to be effective, the model's performance was found to increase slightly by adding an RSA (relative solvent accessibility) parameter to the model. The calculation in the BP3  paper comes from [NetSurfP-3.0](https://services.healthtech.dtu.dk/services/NetSurfP-3.0/), which itself uses LM embeddings to compute an RSA estimate.
 
