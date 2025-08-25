@@ -8,7 +8,7 @@ As a result, measurements of reactivity are limited- it's possible that a donor 
 
 To overcome this limitation, we can use [RFdiffusion](https://github.com/RosettaCommons/RFdiffusion) to scaffold slices of pathogenic proteins into short sequences (roughly 100-mers) still compatible with PepSeq but long enough to fold and recapitulate the epitope region present on the full-length protein.
 
-However, this leaves the problem of creating effective slices of massive libraries of pathogenic proteins that are likely to be conformational epitopes. For example, on a large protein, internally-folded residues are unlikely to contain a conformational epitope region. Naiively taking all possible slices of pathogenic proteins is infeasible since the RFdiffusion scaffolding step is highly lossy and computationally expensive- many potential epitopes won't be successfully scaffolded. 
+However, this leaves the problem of creating effective slices of massive libraries of pathogenic proteins that are likely to be conformational epitopes. For example, on a large protein, internally-folded residues are unlikely to contain a conformational epitope region. Naively taking all possible slices of pathogenic proteins is infeasible since the RFdiffusion scaffolding step is highly lossy and computationally expensive- many potential epitopes won't be successfully scaffolded. 
 
 Therefore, we need a model that takes an input protein and outputs a list of high-likelihood conformational epitope targets which can be scaffolded and used in pepseq to measure donor reactivity.
 
