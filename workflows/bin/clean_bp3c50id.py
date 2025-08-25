@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Generate the base parquet file from BP3 IEDB paper data
+Generate the base parquet file from BP3 paper data
 """
 import polars as pl
 from pathlib import Path

@@ -1,7 +1,7 @@
 
 nextflow.preview.output = true
 
-include { SEQ_LIST_TO_FASTA } from './modules/tgen/af3'
+include { SEQ_LIST_TO_FASTA as MSA_SEQ_LIST_TO_FASTA; SEQ_LIST_TO_FASTA as INF_SEQ_LIST_TO_FASTA; NOOP_DEP } from './modules/tgen/af3'
 include { MSA_WORKFLOW; INFERENCE_WORKFLOW } from './subworkflows/tgen/af3'
 include { splitParquet } from 'plugin/nf-parquet'
 
@@ -155,7 +155,7 @@ workflow AF3_INFERENCE_FROM_BP3_PARQUET {
 
     main:
 
-    af3_ch = bp3_pq.splitParquet()
+    af3_msa_ch = bp3_pq.splitParquet()
     .map{
         row -> 
 
@@ -165,6 +165,24 @@ workflow AF3_INFERENCE_FROM_BP3_PARQUET {
             [
                 id : seq_hash,
                 protein_type : "any",
+            ],
+            [row["seq"]],
+        )
+    }
+
+    af3_msa_fasta_ch = MSA_SEQ_LIST_TO_FASTA(af3_msa_ch)
+
+    MSA_WORKFLOW(af3_msa_fasta_ch)
+
+    new_meta_msa = MSA_WORKFLOW.out.new_meta_msa
+
+    af3_inf_ch = bp3_pq.splitParquet()
+    .map{
+        row -> 
+
+        tuple(
+            [
+                id : row["job_name"],
                 protein_types : ["any"],
                 segids : ["A"],
             ],
@@ -172,15 +190,11 @@ workflow AF3_INFERENCE_FROM_BP3_PARQUET {
         )
     }
 
-    af3_fasta_ch = SEQ_LIST_TO_FASTA(af3_ch)
+    af3_inf_fasta_ch = INF_SEQ_LIST_TO_FASTA(af3_inf_ch)
 
-    MSA_WORKFLOW(af3_fasta_ch)
+    af3_inf_fasta_ch = NOOP_DEP_META(af3_inf_fasta_ch, new_meta_msa.toList())
 
-    new_meta_msa = MSA_WORKFLOW.out.new_meta_msa
-
-    af3_fasta_ch = NOOP_DEP_META(af3_fasta_ch, new_meta_msa.toList())
-
-    INFERENCE_WORKFLOW(af3_fasta_ch, inf_dir)
+    INFERENCE_WORKFLOW(af3_inf_fasta_ch, inf_dir)
 
     emit:
     new_meta_inf = INFERENCE_WORKFLOW.out.new_meta_inf
@@ -202,7 +216,7 @@ workflow {
   AF3_INFERENCE_FROM_BP3_PARQUET(bp3_pq, inf_dir)
   meta_inf = AF3_INFERENCE_FROM_BP3_PARQUET.out.new_meta_inf
 
-  bp3_pq_af3 = NOOP_DEP_META(bp3_pq, meta_inf.toList())
+  bp3_pq_af3 = NOOP_DEP(bp3_pq, meta_inf.toList())
 
   BP3_INFERENCE_FROM_BP3_PARQUET(bp3_pq)
 
