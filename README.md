@@ -47,4 +47,12 @@ Nextflow pipelines are best launched using a conda-managed installation of nextf
 ```bash
 conda env create --file envs/nf-core.yaml
 ```
-To see an example of how to launch the pipeline using this created environment, see 'scripts/bp3c50id.sh`
+
+
+## Running the pipeline
+
+If using TGen's Gemini HPC system, simply run:
+
+```
+sbatch scripts/bp3c50id.sh
+```

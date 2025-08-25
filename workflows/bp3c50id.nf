@@ -134,6 +134,25 @@ process JOIN_BEPIPRED_INFERENCE {
     """
 }
 
+process EXTRACT_RSA {
+    label "epident_local"
+
+    input:
+        path(parquet)
+        val(inf_dir)
+    
+    output:
+        path("*.parquet")
+    
+    script:
+    """
+    rsa_calculator.py \\
+        --input_parquet ${parquet} \\
+        --output_path ${parquet.getSimpleName()}.rsa.parquet \\
+        --inference_path ${inf_dir}
+    """
+}
+
 
 workflow BP3_INFERENCE_FROM_BP3_PARQUET {
     take:
@@ -218,6 +237,8 @@ workflow {
 
   bp3_pq_af3 = NOOP_DEP(bp3_pq, meta_inf.toList())
 
+  bp3_pq_rsa = EXTRACT_RSA(bp3_pq_af3, inf_dir)
+
   BP3_INFERENCE_FROM_BP3_PARQUET(bp3_pq)
 
   bp3_pq_bp3 = BP3_INFERENCE_FROM_BP3_PARQUET.out.bp3_pq_bp3
@@ -227,6 +248,7 @@ workflow {
     discard_pq = discard_pq
     meta_inf = meta_inf
     bp3_pq_bp3 = bp3_pq_bp3
+    bp3_pq_rsa = bp3_pq_rsa
 }
 
 output {
@@ -234,4 +256,5 @@ output {
     discard_pq {}
     meta_inf { path "inference"}
     bp3_pq_bp3 {}
+    bp3_pq_rsa {}
 }
