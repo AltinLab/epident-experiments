@@ -14,7 +14,7 @@ Therefore, we need a model that takes an input protein and outputs a list of hig
 
 With this ultimate goal in mind, the goals of this epitope identification project are twofold:
 
-1. Establish a baseline of epitope identification performance from predicted structure
+### 1. Establish a baseline of epitope identification performance from predicted structure
 
 [BP3](https://onlinelibrary.wiley.com/doi/full/10.1002/pro.4497), the currect SOTA model in epitope identificaiton, use ESM-2 LM embeddings to predict where epitope residues are located given a protein sequence. 
 
@@ -24,7 +24,7 @@ The RSA paramter was never included in the final, released model due to the slow
 
 The first goal of this project is to re-train a BP3-like architecture using AF3's structural embeddings (some combination of single- and pairwise- embeddings) to attempt to beat BP3's LM-embedding based model on the BP3C50ID test set.
 
-2. Aggregate predictions into distinct conformational epitopes
+### 2. Aggregate predictions into distinct conformational epitopes
 
 BP3 predicts whether individual residues are a part of an epitope, including information about surrounding residues by using ESM-2 embeddings, which results in a prediction value per each residue in the input protein. This means that the model doesn't identify epitope regions, just epitope residues. This model leaves the prolem of aggregation into distinct conformational or linear epitopes unsolved.
 
