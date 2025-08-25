@@ -8,3 +8,4 @@ dependencies:
 
   - nf-core
   - nextflow
+  - dvc

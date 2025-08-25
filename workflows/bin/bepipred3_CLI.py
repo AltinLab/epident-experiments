@@ -10,8 +10,6 @@ import zipfile
 import esm
 import torch
 
-WORK_DIR = Path(Path(__file__).parent.resolve())
-
 
 class AntigensCached(bepipred3.Antigens):
     """
@@ -130,7 +128,7 @@ parser.add_argument(
 parser.add_argument(
     "-esm_dir",
     action="store",
-    default=WORK_DIR / "esm_encodings",
+    default=".",
     dest="esm_dir",
     type=Path,
     help="Directory to save esm encodings to. Default is current working directory.",

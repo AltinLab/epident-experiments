@@ -29,3 +29,22 @@ The first goal of this project is to re-train a BP3-like architecture using AF3'
 BP3 predicts whether individual residues are a part of an epitope, including information about surrounding residues by using ESM-2 embeddings, which results in a prediction value per each residue in the input protein. This means that the model doesn't identify epitope regions, just epitope residues. This model leaves the problem of aggregation into distinct conformational or linear epitopes unsolved.
 
 The second goal of this project is to aggregate the results of the model from the first stage into distinct conformational epitopes. It may be more effective to train a model explicity for this purpose rather than aggregating a BP3-like model's results, but this will require the creation of a new training and testing dataset with explicit labels for distinct epitopes.
+
+
+## Setup:
+
+The primary environment for the code in this repo must be created using these steps:
+```bash
+conda env create --file envs/env.yaml
+conda activate epident-experiments
+pip install -e .
+conda deactivate
+```
+If using miniconda, this is sufficient. Otherwise, change the conda env path in 'conf/epident.config`
+to the appropriate environment path for your conda installation.
+
+Nextflow pipelines are best launched using a conda-managed installation of nextflow. To create this, run:
+```bash
+conda env create --file envs/nf-core.yaml
+```
+To see an example of how to launch the pipeline using this created environment, see 'scripts/bp3c50id.sh`

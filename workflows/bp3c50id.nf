@@ -1,10 +1,37 @@
 
 nextflow.preview.output = true
 
-process CLEAN_BP3C50ID {
-  label 'process_local'
-  conda "envs/env.yaml"
+include { SEQ_LIST_TO_FASTA } from './modules/tgen/af3'
+include { MSA_WORKFLOW; INFERENCE_WORKFLOW } from './subworkflows/tgen/af3'
+include { splitParquet } from 'plugin/nf-parquet'
 
+def hash_from(String seq) {
+    def md = java.security.MessageDigest.getInstance("SHA-256")
+    md.update(seq.getBytes('UTF-8'))      // use getBytes(...) rather than .bytes
+    def bytes = md.digest()
+    bytes.collect { String.format('%02x', it) }.join()
+}
+
+process NOOP_DEP_META {
+
+    label "af3_process_local"
+
+    input:
+    tuple val(meta), path(input_val)
+    val value
+
+    output:
+    tuple val(meta), path("*", includeInputs: true)
+
+    script:
+    """
+    true
+    """
+}
+
+
+process CLEAN_BP3C50ID {
+  label 'epident_local'
 
   input:
     path train_fasta
@@ -25,9 +52,8 @@ process CLEAN_BP3C50ID {
 }
 
 process PARQUET_TO_FASTA {
-  label "process_local"
-  conda "envs/env.yaml"
-  
+  label "epident_local"
+
   input:
       path(parquet)
   
@@ -49,13 +75,8 @@ process PARQUET_TO_FASTA {
 }
 
 process RUN_BEPIPRED {
-  queue 'gpu-v100'
-  cpus '8'
-  clusterOptions '--nodes=1 --ntasks=1 --gres=gpu:1 --time=2-00:00:00'
-  memory '64GB'
-  executor "slurm"
+  label 'bp3_inference'
   tag "bp3"
-  conda 'envs/bp3.yaml'
   
   input:
   path(fasta)
@@ -65,20 +86,19 @@ process RUN_BEPIPRED {
   
   script:
   """
-  export TORCH_HOME=${params.torch_home}
+  export TORCH_HOME=${params.bp3_torch_home}
   
   bepipred3_CLI.py \\
       -i ${fasta} \\
       -o . \\
       -pred mjv_pred \\
       -add_seq_len \\
-      -esm_dir ${params.esm_dir}
+      -esm_dir ${params.bp3_esm_dir}
   """
 }
 
 process JOIN_BEPIPRED_INFERENCE {
-    label "process_local"
-    conda "envs/env.yaml"
+    label "epident_local"
 
     input:
         path(filt_dset)
@@ -125,36 +145,79 @@ workflow BP3_INFERENCE_FROM_BP3_PARQUET {
     JOIN_BEPIPRED_INFERENCE(bp3_pq, RUN_BEPIPRED.out)
 
     emit:
-    JOIN_BEPIPRED_INFERENCE.out
+    bp3_pq_bp3 = JOIN_BEPIPRED_INFERENCE.out
 }
 
 workflow AF3_INFERENCE_FROM_BP3_PARQUET {
     take:
     bp3_pq
+    inf_dir
 
     main:
 
-    emit:
+    af3_ch = bp3_pq.splitParquet()
+    .map{
+        row -> 
 
+        def seq_hash = hash_from(row["seq"])
+
+        tuple(
+            [
+                id : seq_hash,
+                protein_type : "any",
+                protein_types : ["any"],
+                segids : ["A"],
+            ],
+            [row["seq"]],
+        )
+    }
+
+    af3_fasta_ch = SEQ_LIST_TO_FASTA(af3_ch)
+
+    MSA_WORKFLOW(af3_fasta_ch)
+
+    new_meta_msa = MSA_WORKFLOW.out.new_meta_msa
+
+    af3_fasta_ch = NOOP_DEP_META(af3_fasta_ch, new_meta_msa.toList())
+
+    INFERENCE_WORKFLOW(af3_fasta_ch, inf_dir)
+
+    emit:
+    new_meta_inf = INFERENCE_WORKFLOW.out.new_meta_inf
 }
 
 workflow {
   
+  main:
   test_fasta = Channel.fromPath(params.test_fasta)
   train_fasta = Channel.fromPath(params.train_fasta)
 
+  inf_dir = file("$workflow.outputDir/inference").toUriString()
+
   CLEAN_BP3C50ID(train_fasta, test_fasta)
 
-  bp3_pq = CLEAN_BP3C50ID.filt_pq
-  discard_pq = CLEAN_BP3C50ID.discard_pq
+  bp3_pq = CLEAN_BP3C50ID.out.filt_pq
+  discard_pq = CLEAN_BP3C50ID.out.discard_pq
 
-  output:
+  AF3_INFERENCE_FROM_BP3_PARQUET(bp3_pq, inf_dir)
+  meta_inf = AF3_INFERENCE_FROM_BP3_PARQUET.out.new_meta_inf
+
+  bp3_pq_af3 = NOOP_DEP_META(bp3_pq, meta_inf.toList())
+
+  BP3_INFERENCE_FROM_BP3_PARQUET(bp3_pq)
+
+  bp3_pq_bp3 = BP3_INFERENCE_FROM_BP3_PARQUET.out.bp3_pq_bp3
+
+  publish:
     bp3_pq = bp3_pq
     discard_pq = discard_pq
-
+    meta_inf = meta_inf
+    bp3_pq_bp3 = bp3_pq_bp3
 }
 
-publish {
-    bp3_pq
-    discard_pq
+output {
+    bp3_pq {}
+    discard_pq {}
+    meta_inf { path "inference"}
+    bp3_pq_bp3 {}
 }
