@@ -35,7 +35,7 @@ The second goal of this project is to aggregate the results of the model from th
 
 The primary environment for the code in this repo must be created using these steps:
 ```bash
-conda env create --file envs/env.yaml
+conda env create --file envs/epident-experiments.yaml
 conda activate epident-experiments
 pip install -e .
 conda deactivate
@@ -49,10 +49,7 @@ conda env create --file envs/nf-core.yaml
 ```
 
 
-## Running the pipeline
+## Running the pipelines
 
-If using TGen's Gemini HPC system, simply run:
-
-```
-sbatch scripts/bp3c50id.sh
-```
+If using TGen's Gemini HPC system, see the series of scripts used to create each dataset in `scripts/`.
+These scripts are designed to be run from the root of the cloned repo.
