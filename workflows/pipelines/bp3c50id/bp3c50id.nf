@@ -1,8 +1,8 @@
 
 nextflow.preview.output = true
 
-include { SEQ_LIST_TO_FASTA as MSA_SEQ_LIST_TO_FASTA; SEQ_LIST_TO_FASTA as INF_SEQ_LIST_TO_FASTA; NOOP_DEP } from './modules/tgen/af3'
-include { MSA_WORKFLOW; INFERENCE_WORKFLOW } from './subworkflows/tgen/af3'
+include { SEQ_LIST_TO_FASTA as MSA_SEQ_LIST_TO_FASTA; SEQ_LIST_TO_FASTA as INF_SEQ_LIST_TO_FASTA; NOOP_DEP } from '../../modules/af3'
+include { MSA_WORKFLOW; INFERENCE_WORKFLOW } from '../../subworkflows/af3'
 include { splitParquet } from 'plugin/nf-parquet'
 
 def hash_from(String seq) {

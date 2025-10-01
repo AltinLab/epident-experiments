@@ -42,7 +42,6 @@ process NOOP_DEP {
 process FILT_FORMAT_MSA {
     label "af3_process_local"
     tag "${meta.protein_type}-${meta.id}"
-    conda "${moduleDir}/environment.yaml"
 
     input:
     tuple val(meta), path(fasta)
@@ -94,7 +93,6 @@ process RUN_MSA {
 
 process COMPOSE_INFERENCE_JSON {
     label "af3_process_local"
-    conda "${moduleDir}/environment.yaml"
     tag "${meta.id}"
 
     input:
@@ -151,7 +149,6 @@ process CLEAN_INFERENCE_DIR {
     tag "clean_inference"
     errorStrategy { sleep(Math.pow(2, task.attempt) * 200 as long); return 'retry' }
     maxRetries 5
-    conda "${moduleDir}/environment.yaml"
 
     input:
     tuple val(meta), path(inference_dir)

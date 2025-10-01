@@ -207,4 +207,7 @@ marimo/_lsp/
 __marimo__/
 
 data/**/inference
+data/in_v1
+data/hv_v1
+tmp
 logs
